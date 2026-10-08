@@ -24,8 +24,8 @@ Install the toolchain for your platform as described in the
 - **Windows:** [MSYS2](https://www.msys2.org), then in its MINGW64 shell
   `pacman -S make tar unzip zstd jq mingw-w64-x86_64-gcc`
 
-Then download the [Rack SDK](https://vcvrack.com/downloads/) for your platform (`lin-x64`, `win-x64` or
-`mac-x64+arm64`) and point `RACK_DIR` at it:
+Then download the [Rack SDK](https://vcvrack.com/downloads/) for your platform (`lin-x64`, `win-x64`, `mac-x64` or
+`mac-arm64`) and point `RACK_DIR` at it:
 
 ```sh
 unzip Rack-SDK-2.6.6-lin-x64.zip
