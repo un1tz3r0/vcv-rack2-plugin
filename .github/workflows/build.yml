@@ -1,0 +1,96 @@
+# Builds the plugin for every platform Rack supports on each push and pull request, keeping the
+# .vcvplugin packages as workflow artifacts. Pushing a tag vX.Y.Z that matches the version in
+# plugin.json also publishes them as a GitHub release.
+name: Build
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+env:
+  RACK_SDK_VERSION: 2.6.6
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    # An older distribution's glibc, so the plugin also loads on older Linux systems.
+    container: ubuntu:20.04
+    steps:
+      - name: Install toolchain
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends build-essential ca-certificates curl unzip jq zstd
+      - uses: actions/checkout@v4
+      - name: Get Rack SDK
+        run: curl -fsSL "https://vcvrack.com/downloads/Rack-SDK-$RACK_SDK_VERSION-lin-x64.zip" -o sdk.zip && unzip -q sdk.zip -d ..
+      - name: Build
+        run: make dist RACK_DIR=../Rack-SDK
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lin-x64
+          path: dist/*.vcvplugin
+
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: make tar unzip zstd curl jq mingw-w64-x86_64-gcc
+      - uses: actions/checkout@v4
+      - name: Get Rack SDK
+        run: curl -fsSL "https://vcvrack.com/downloads/Rack-SDK-$RACK_SDK_VERSION-win-x64.zip" -o sdk.zip && unzip -q sdk.zip -d ..
+      - name: Build
+        run: make dist RACK_DIR=../Rack-SDK
+      - uses: actions/upload-artifact@v4
+        with:
+          name: win-x64
+          path: dist/*.vcvplugin
+
+  mac:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        include:
+          - { arch: x64, target: x86_64-apple-darwin }
+          - { arch: arm64, target: arm64-apple-darwin }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get Rack SDK
+        run: curl -fsSL "https://vcvrack.com/downloads/Rack-SDK-$RACK_SDK_VERSION-mac-x64+arm64.zip" -o sdk.zip && unzip -q sdk.zip -d ..
+      - name: Build
+        run: make dist RACK_DIR=../Rack-SDK CROSS_COMPILE=${{ matrix.target }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mac-${{ matrix.arch }}
+          path: dist/*.vcvplugin
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [linux, windows, mac]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the tag matches plugin.json
+        run: |
+          version=$(jq -r .version plugin.json)
+          if [ "${GITHUB_REF_NAME#v}" != "$version" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match version $version in plugin.json"
+            exit 1
+          fi
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/*.vcvplugin --title "$GITHUB_REF_NAME" --generate-notes
