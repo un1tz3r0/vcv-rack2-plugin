@@ -1,0 +1,25 @@
+{
+  "slug": "PluginTemplate",
+  "name": "Plugin Template",
+  "version": "2.0.0",
+  "license": "MIT",
+  "brand": "un1tz3r0",
+  "author": "Victor Condino",
+  "authorEmail": "",
+  "authorUrl": "https://github.com/un1tz3r0",
+  "pluginUrl": "https://github.com/un1tz3r0/vcv-rack2-plugin",
+  "manualUrl": "https://github.com/un1tz3r0/vcv-rack2-plugin#readme",
+  "sourceUrl": "https://github.com/un1tz3r0/vcv-rack2-plugin",
+  "donateUrl": "",
+  "changelogUrl": "https://github.com/un1tz3r0/vcv-rack2-plugin/releases",
+  "minRackVersion": "2.4.0",
+  "modules": [
+    {
+      "slug": "Example",
+      "name": "Example",
+      "description": "Morphing oscillator with a built-in scope, demonstrating the common panel idioms",
+      "manualUrl": "https://github.com/un1tz3r0/vcv-rack2-plugin#the-example-module",
+      "tags": ["Oscillator", "Low-frequency oscillator", "Waveshaper", "Visual", "Polyphonic"]
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+/build
+/dist
+/plugin.so
+/plugin.dylib
+/plugin.dll
+*.vcvplugin
+__pycache__/
+.DS_Store
